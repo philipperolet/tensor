@@ -27,24 +27,38 @@ class NeuralNet(object):
 
     def train(self, data):
         while not(self._convergence()):
-            self.previous_loss = self.loss
-            self.loss = self._train_batch(np.random.choice(data, BATCH_SIZE))  # train on batches
+            self._previous_loss = self.loss
+            batch_ints = np.random.randint(len(data), size=BATCH_SIZE)
+            self.loss = self._train_batch(data[batch_ints])  # train on batches
+        return self.loss
 
     def _train_batch(self, data):
         # Init
-        x = data[:-1]
-        y = data[-1]
+        x = data[:, :-1]
+
+        y = data[:, -1]
         err = y - self.run(x)
 
-        # Adjust output weights
-        self._output_weights -= np.sum(np.multiply(sigmoid(np.dot(x, self._weights)), err)) * GRADIENT_STEP_SIZE
-        
-        # TODO
-        pass
+        # partial derivative of loss is d/dw (1/2 err^2), that is err * d/dw(err)
+        # for the output weight wout_i, d/dwout_i(err) = sigma(wi.x)
+        # with wi the vector of weights of neuron i
+        wout_err_deriv = sigmoid(np.dot(x, self._weights))
 
-    def _convergence(self, data):
+        # for a hidden layer weight j of neuron i, d/dwi_j(err) matrix is as below
+        wij_err_deriv = np.multiply(wout_err_deriv,
+                                    (1 - wout_err_deriv),
+                                    self._output_weights) * np.transpose(x)
+    
+        # Adjust output weights
+        self._output_weights -= np.sum(np.multiply(wout_err_deriv, err)) * GRADIENT_STEP_SIZE
+
+        # Adjust input weights
+        self._weights -= np.sum(np.multiply(wij_err_deriv, err)) * GRADIENT_STEP_SIZE
+        return np.sum(np.power(y - self.run(x), 2))
+
+    def _convergence(self):
         # Loss / previous loss NaN init make the first ineq eval to False
-        return ((math.abs(self.loss - self.previous_loss) < ERROR_THRESHOLD)
+        return ((abs(self.loss - self._previous_loss) < ERROR_THRESHOLD)
                 and self._learning_steps > STEPS_THRESHOLD)
 
         

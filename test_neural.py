@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import unittest
+import numpy as np
 
 from neural import NeuralNet
 
@@ -39,3 +40,16 @@ class NeuralNetTest(unittest.TestCase):
         self.assertEqual(4.5, self.nn.run([2**50, 0, 2**50]))  # Large numbers for easy mental check
         self.assertEqual(4.0, self.nn.run([2**51, 2**51, -2**50]))
 
+    def test_training(self):
+        data = self.generate_data()
+        loss = self.nn.train(data)
+        print "loss is {}".format(loss)
+        print "test set results for xy + xz + yz"
+        test = self.generate_data(5)
+        print [test, self.run(test)]
+
+    def generate_data(self, size=10000):
+        data = np.zeros((size, 4))
+        data[:, :-1] = np.random.rand(size, 3)
+        data[:, -1] = np.multiply(data[:, 0], data[:, 1]) + np.multiply(data[:, 0], data[:, 2]) + np.multiply(data[:, 1], data[:, 2])
+        return data
