@@ -2,8 +2,9 @@
 
 import unittest
 import numpy as np
+import tensorflow as tf
 
-from neural import NeuralNet
+from neural import NeuralNet, BATCH_SIZE, sigmoid
 
 
 class NeuralNetTest(unittest.TestCase):
@@ -57,5 +58,40 @@ class NeuralNetTest(unittest.TestCase):
         data = np.zeros((size, 4))
         data[:, :-1] = np.random.rand(size, 3)
         # data[:, -1] = np.multiply(data[:, 0], data[:, 1]) + np.multiply(data[:, 0], data[:, 2]) + np.multiply(data[:, 1], data[:, 2])
-        data[:, -1] = data[:, 0] + 2 * data[:, 1]
+        data[:, -1] = (data[:, 0] + 2 * data[:, 1])/3
         return data
+
+    def test_tf(self):
+        # Model parameters
+        W_out = tf.Variable(tf.truncated_normal([4, 1], stddev=0.1), dtype=tf.float32)
+        W_in = tf.Variable(tf.truncated_normal([3, 4], stddev=0.1), dtype=tf.float32)
+
+        # Model input and output
+        x = tf.placeholder(tf.float32, shape=[None, 3])
+        neural_model = tf.matmul(tf.sigmoid(tf.matmul(x, W_in)), W_out)
+        y = tf.placeholder(tf.float32)
+
+        # loss
+        loss = tf.reduce_sum(tf.square(neural_model - y))  # sum of the squares
+        # optimizer
+        optimizer = tf.train.GradientDescentOptimizer(0.001)
+        train = optimizer.minimize(loss)
+
+        # training data
+        x_train = np.random.rand(100000, 3)
+        y_train = (x_train[:, 0] + 2 * x_train[:, 1])/3
+        print x_train[1:10]
+        print y_train[1:10]
+        # training loop
+        init = tf.global_variables_initializer()
+        sess = tf.Session()
+        sess.run(init)  # reset values to wrong
+        for i in range(500):
+            print i
+            batch_ints = np.random.randint(len(x_train), size=BATCH_SIZE)
+            sess.run(train, {x: x_train[batch_ints], y: y_train[batch_ints]})
+
+        # evaluate training accuracy
+        curr_W, curr_b, curr_loss = sess.run([W_in, W_out, loss], {x: x_train[batch_ints], y: y_train[batch_ints]})
+
+        print("W: %s b: %s loss: %s" % (curr_W, curr_b, curr_loss))

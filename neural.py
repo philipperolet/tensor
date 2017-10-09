@@ -11,7 +11,7 @@ class NeuralNet(object):
     '''Neural network. As a convention, data is an array of inputs with the
     last column being the output'''
 
-    def __init__(self, nb_neurons=2, input_size=3):
+    def __init__(self, nb_neurons=4, input_size=3):
         self.nb_neurons = nb_neurons
         self.input_size = input_size
         self._weights = np.zeros((input_size, nb_neurons))
