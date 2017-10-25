@@ -4,7 +4,7 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from neural import NeuralNet, BATCH_SIZE, sigmoid
+from neural import NeuralNet, BATCH_SIZE
 
 
 class NeuralNetTest(unittest.TestCase):
