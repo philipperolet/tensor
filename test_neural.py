@@ -51,14 +51,14 @@ class NeuralNetTest(unittest.TestCase):
         loss = self.nn.train(data)
         print "loss is {}".format(loss)
         print "test set results for xy + xz + yz"
-        test_data = self.generate_data(5)
+        test_data = self.genenrate_data(5)
         print [test_data, self.nn.run(test_data[:, :-1])]
 
     def generate_data(self, size=100000):
         data = np.zeros((size, 4))
-        data[:, :-1] = np.random.rand(size, 3)
+        data[:, :-1] = np.random.randint(-1000, 1000, [size, 3])
         # data[:, -1] = np.multiply(data[:, 0], data[:, 1]) + np.multiply(data[:, 0], data[:, 2]) + np.multiply(data[:, 1], data[:, 2])
-        data[:, -1] = (data[:, 0] + 2 * data[:, 1])/3
+        data[:, -1] = np.where(data[:, 0] > 0, 10, 0) - np.where(data[:, 1] > 0, 20, 0)
         return data
 
     def test_tf(self):
@@ -74,22 +74,27 @@ class NeuralNetTest(unittest.TestCase):
         # loss
         loss = tf.reduce_sum(tf.square(neural_model - y))  # sum of the squares
         # optimizer
-        optimizer = tf.train.GradientDescentOptimizer(0.001)
-        train = optimizer.minimize(loss)
+        optimizer = tf.train.GradientDescentOptimizer(0.0000001).minimize(loss)
 
         # training data
-        x_train = np.random.rand(100000, 3)
-        y_train = (x_train[:, 0] + 2 * x_train[:, 1])/3
+        data = self.generate_data()
+        x_train = data[:, :-1]
+        y_train = data[:, -1]
         print x_train[1:10]
         print y_train[1:10]
         # training loop
-        init = tf.global_variables_initializer()
-        sess = tf.Session()
-        sess.run(init)  # reset values to wrong
+        sess = tf.InteractiveSession()
+        tf.global_variables_initializer().run()
+        # sess.run(init)  
         for i in range(500):
-            print i
-            batch_ints = np.random.randint(len(x_train), size=BATCH_SIZE)
-            sess.run(train, {x: x_train[batch_ints], y: y_train[batch_ints]})
+
+            batch_ints = np.random.randint(len(x_train), size=1000)
+            if (i % 100 == 0):
+                print i
+                print sess.run([W_in, W_out])
+                print sess.run(neural_model, {x : x_train[1:10]})
+#                import pdb; pdb.set_trace()
+            sess.run(optimizer, {x: x_train[batch_ints], y: y_train[batch_ints]})
 
         # evaluate training accuracy
         curr_W, curr_b, curr_loss = sess.run([W_in, W_out, loss], {x: x_train[batch_ints], y: y_train[batch_ints]})

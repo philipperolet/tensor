@@ -4,7 +4,7 @@ import numpy as np
 BATCH_SIZE = 1000  # training batch size
 ERROR_THRESHOLD = 0.01
 GRADIENT_STEP_SIZE = 0.00001
-STEPS_THRESHOLD = 1000
+nSTEPS_THRESHOLD = 1000
 
 
 class NeuralNet(object):
@@ -14,8 +14,8 @@ class NeuralNet(object):
     def __init__(self, nb_neurons=4, input_size=3):
         self.nb_neurons = nb_neurons
         self.input_size = input_size
-        self._weights = np.zeros((input_size, nb_neurons))
-        self._output_weights = np.zeros(nb_neurons)
+        self._weights = (np.random.rand(input_size, nb_neurons)-0.5)*0.2
+        self._output_weights = (np.random.rand(nb_neurons)-0.5)*0.2
         self.loss = float('nan')  # current generalization error, undefined at init
         self._previous_loss = float('nan')
 
@@ -29,14 +29,17 @@ class NeuralNet(object):
     def train(self, data):
         count = 0
         while not(self._convergence()):
+            if (count % 15000 == 0):
+                print "Trained batch {} - loss is {}.".format(count, self.loss)
+                print "Example on {} - y is {}, nn is {}".format([50, 100, -100], -10, self.run([50, 100, -100]))
+                print self._weights
+                print self._output_weights
+#                import pdb; pdb.set_trace()
+
             self._previous_loss = self.loss
             batch_ints = np.random.randint(len(data), size=BATCH_SIZE)
             self.loss = self._train_batch(data[batch_ints])  # train on batches
             count += 1
-            if (count % 15000 == 0):
-                print "Trained batch {} - loss is {}.".format(count, self.loss)
-                print "Example on {} - y is {}, nn is {}".format([0.5, 1, 1], 2.5, self.run([0.5, 1, 1]))
-                import pdb; pdb.set_trace()
 
         return self.loss
 
@@ -69,6 +72,10 @@ class NeuralNet(object):
         # Loss / previous loss NaN init make the first ineq eval to False
         return False; ((abs(self.loss - self._previous_loss) < ERROR_THRESHOLD/10))
 
-        
+
 def sigmoid(x):
     return 1/(1+np.exp(np.negative(x)))
+
+
+def relu(x):
+    return np.max(0, x)
