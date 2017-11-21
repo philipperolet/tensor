@@ -4,15 +4,13 @@ import unittest
 import numpy as np
 import tensorflow as tf
 
-from neural import NeuralNet, BATCH_SIZE
+from neural import NeuralNet
 
 
 class NeuralNetTest(unittest.TestCase):
 
-    def setUp(self):
-        self.nn = NeuralNet()
-
     def test_eval_function_works(self):
+        self.nn = NeuralNet(3, 8)
         # fails if input not correct
         with self.assertRaises(TypeError):
             self.nn.run(3)
@@ -22,6 +20,8 @@ class NeuralNetTest(unittest.TestCase):
             self.nn.run([4, 4, 3, 5])
 
         # with weights at 0, two different inputs should yield 0
+        self.nn._weights = np.zeros([3, 8])
+        self.nn._output_weights = np.zeros(8)
         self.assertEqual(0, self.nn.run([1, 1, 1]))
         self.assertEqual(0, self.nn.run([2, 2, 0]))
 
@@ -47,6 +47,7 @@ class NeuralNetTest(unittest.TestCase):
             self.nn.run(np.array([[2**51, 2**51, -2**50], [2**50, 0, 2**50]])))
 
     def test_training(self):
+        self.nn = NeuralNet(3, 4)
         data = self.generate_data()
         loss = self.nn.train(data)
         print "loss is {}".format(loss)
@@ -57,14 +58,13 @@ class NeuralNetTest(unittest.TestCase):
     def generate_data(self, size=100000):
         data = np.zeros((size, 4))
         data[:, :-1] = np.random.randint(-1000, 1000, [size, 3])
-        # data[:, -1] = np.multiply(data[:, 0], data[:, 1]) + np.multiply(data[:, 0], data[:, 2]) + np.multiply(data[:, 1], data[:, 2])
         data[:, -1] = np.where(data[:, 0] > 0, 10, 0) - np.where(data[:, 1] > 0, 20, 0)
         return data
 
     def test_tf(self):
         # Model parameters
-        W_out = tf.Variable(tf.truncated_normal([4, 1], stddev=0.1), dtype=tf.float32)
-        W_in = tf.Variable(tf.truncated_normal([3, 4], stddev=0.1), dtype=tf.float32)
+        W_out = tf.Variable(np.reshape(self.nn._output_weights, (4, 1)), dtype=tf.float32)
+        W_in = tf.Variable(self.nn._weights, dtype=tf.float32)
 
         # Model input and output
         x = tf.placeholder(tf.float32, shape=[None, 3])
@@ -74,7 +74,7 @@ class NeuralNetTest(unittest.TestCase):
         # loss
         loss = tf.reduce_sum(tf.square(neural_model - y))  # sum of the squares
         # optimizer
-        optimizer = tf.train.GradientDescentOptimizer(0.0000001).minimize(loss)
+        optimizer = tf.train.GradientDescentOptimizer(0.0001).minimize(loss)
 
         # training data
         data = self.generate_data()
@@ -85,6 +85,8 @@ class NeuralNetTest(unittest.TestCase):
         # training loop
         sess = tf.InteractiveSession()
         tf.global_variables_initializer().run()
+        print sess.run(neural_model, {x: x_train[1:10]})
+        print self.nn.run(x_train[1:10])
         # sess.run(init)  
         for i in range(500):
 

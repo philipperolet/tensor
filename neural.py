@@ -1,47 +1,49 @@
 import numpy as np
-
+import time
+import logging
 
 BATCH_SIZE = 1000  # training batch size
 ERROR_THRESHOLD = 0.01
 GRADIENT_STEP_SIZE = 0.00001
-nSTEPS_THRESHOLD = 1000
+STEPS_THRESHOLD = 1000
+logging.getLogger().setLevel(logging.INFO)
 
 
 class NeuralNet(object):
-    '''Neural network. As a convention, data is an array of inputs with the
-    last column being the output'''
+    '''Neural network with nb_inputs inputs and nb_neurons neurons in a hidden layer,
+    with a sigmoid activation function for the hidden layer, and a linear output.'''
 
-    def __init__(self, nb_neurons=4, input_size=3):
+    def __init__(self, nb_inputs, nb_neurons):
+        self.nb_inputs = nb_inputs
         self.nb_neurons = nb_neurons
-        self.input_size = input_size
-        self._weights = (np.random.rand(input_size, nb_neurons)-0.5)*0.2
+        self._weights = (np.random.rand(nb_inputs, nb_neurons)-0.5)*0.2
         self._output_weights = (np.random.rand(nb_neurons)-0.5)*0.2
         self.loss = float('nan')  # current generalization error, undefined at init
         self._previous_loss = float('nan')
 
     def run(self, x):
-        """Runs the network on an input array, lines are """
-        if not((isinstance(x, list) and len(x) == self.input_size) or
-               (isinstance(x, np.ndarray) and x.shape[1] == self.input_size)):
-            raise TypeError("Input should be list of size {}".format(self.input_size))
+        """Runs the network on an array of inputs (as lines)"""
+        if not((isinstance(x, list) and len(x) == self.nb_inputs) or
+               (isinstance(x, np.ndarray) and x.shape[1] == self.nb_inputs)):
+            raise TypeError("Input should be list of size {}".format(self.nb_inputs))
         return np.dot(sigmoid(np.dot(np.array(x), self._weights)), self._output_weights)
 
     def train(self, data):
+        '''data is an array with the first n-1 columns being the inputs
+        and the last column being the output'''
         count = 0
         while not(self._convergence()):
-            if (count % 15000 == 0):
-                print "Trained batch {} - loss is {}.".format(count, self.loss)
-                print "Example on {} - y is {}, nn is {}".format([50, 100, -100], -10, self.run([50, 100, -100]))
-                print self._weights
-                print self._output_weights
-#                import pdb; pdb.set_trace()
-
             self._previous_loss = self.loss
             batch_ints = np.random.randint(len(data), size=BATCH_SIZE)
             self.loss = self._train_batch(data[batch_ints])  # train on batches
             count += 1
-
+            self.log_every5s("Current iteration : {}, loss : {}".format(count, self.loss))
         return self.loss
+
+    def log_every5s(self, message):
+        if (not(hasattr(self, "_last_log")) or (time.time() - self._last_log > 5)):
+            logging.info(message)
+            self._last_log = time.time()
 
     def _train_batch(self, data):
         # Init
