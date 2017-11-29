@@ -50,7 +50,7 @@ class NeuralNetTest(unittest.TestCase):
         self.nn = NeuralNet(3, 4)
         data = self.generate_data()
         loss = self.nn.train(data)
-        print "loss is {}".format(loss)
+        print "loss is {}".format(loss[-1])
         print "test set results for xy + xz + yz"
         test_data = self.genenrate_data(5)
         print [test_data, self.nn.run(test_data[:, :-1])]
@@ -62,6 +62,7 @@ class NeuralNetTest(unittest.TestCase):
         return data
 
     def test_tf(self):
+        self.nn = NeuralNet(3, 4)
         # Model parameters
         W_out = tf.Variable(np.reshape(self.nn._output_weights, (4, 1)), dtype=tf.float32)
         W_in = tf.Variable(self.nn._weights, dtype=tf.float32)
@@ -72,9 +73,11 @@ class NeuralNetTest(unittest.TestCase):
         y = tf.placeholder(tf.float32)
 
         # loss
-        loss = tf.reduce_sum(tf.square(neural_model - y))  # sum of the squares
+        squared_deltas = tf.square(neural_model - y)
+        loss = tf.losses.mean_squared_error(y, neural_model)
         # optimizer
-        optimizer = tf.train.GradientDescentOptimizer(0.0001).minimize(loss)
+        optimizer = tf.train.GradientDescentOptimizer(0.1)
+        train = optimizer.minimize(loss)
 
         # training data
         data = self.generate_data()
@@ -83,10 +86,11 @@ class NeuralNetTest(unittest.TestCase):
         print x_train[1:10]
         print y_train[1:10]
         # training loop
-        sess = tf.InteractiveSession()
-        tf.global_variables_initializer().run()
-        print sess.run(neural_model, {x: x_train[1:10]})
-        print self.nn.run(x_train[1:10])
+        init = tf.global_variables_initializer()
+        sess = tf.Session()
+        sess.run(init)
+        # print sess.run(neural_model, {x: x_train[1:10]})
+        # print self.nn.run(x_train[1:10])
         # sess.run(init)  
         for i in range(500):
 
@@ -96,7 +100,7 @@ class NeuralNetTest(unittest.TestCase):
                 print sess.run([W_in, W_out])
                 print sess.run(neural_model, {x : x_train[1:10]})
 #                import pdb; pdb.set_trace()
-            sess.run(optimizer, {x: x_train[batch_ints], y: y_train[batch_ints]})
+            sess.run(train, {x: x_train[batch_ints], y: y_train[batch_ints]})
 
         # evaluate training accuracy
         curr_W, curr_b, curr_loss = sess.run([W_in, W_out, loss], {x: x_train[batch_ints], y: y_train[batch_ints]})

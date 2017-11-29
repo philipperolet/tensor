@@ -18,8 +18,6 @@ class NeuralNet(object):
         self.nb_neurons = nb_neurons
         self._weights = (np.random.rand(nb_inputs, nb_neurons)-0.5)*0.2
         self._output_weights = (np.random.rand(nb_neurons)-0.5)*0.2
-        self.loss = float('nan')  # current generalization error, undefined at init
-        self._previous_loss = float('nan')
 
     def run(self, x):
         """Runs the network on an array of inputs (as lines)"""
@@ -31,17 +29,19 @@ class NeuralNet(object):
     def train(self, data):
         '''data is an array with the first n-1 columns being the inputs
         and the last column being the output'''
-        count = 0
-        while not(self._convergence()):
-            self._previous_loss = self.loss
+        training_losses = []
+        while True:
             batch_ints = np.random.randint(len(data), size=BATCH_SIZE)
-            self.loss = self._train_batch(data[batch_ints])  # train on batches
-            count += 1
-            self.log_every5s("Current iteration : {}, loss : {}".format(count, self.loss))
-        return self.loss
+            current_loss = self._train_batch(data[batch_ints])  # train on batches
+            training_losses.append(current_loss)
+            self.log_every_seconds(
+                "Current iteration : {}, current loss : {}, convergence : {} ".format(
+                    len(training_losses), training_losses[-1], self._convergence(training_losses)
+                ))
+        return training_losses
 
-    def log_every5s(self, message):
-        if (not(hasattr(self, "_last_log")) or (time.time() - self._last_log > 5)):
+    def log_every_seconds(self, message, seconds=1):
+        if (not(hasattr(self, "_last_log")) or (time.time() - self._last_log > seconds)):
             logging.info(message)
             self._last_log = time.time()
 
@@ -52,9 +52,10 @@ class NeuralNet(object):
         y = data[:, -1]
         err = y - self.run(x)
 
-        # partial derivative of loss is d/dw (1/2 err^2), that is err * d/dw(err)
-        # for the output weight wout_i, d/dwout_i(err) = sigma(wi.x)
-        # with wi the vector of weights of neuron i
+        # gradient values, aka partial derivative of loss,
+        # are d/dw (1/2 err^2), that is err * d/dw(err)
+        # for the output weight wout_i, d/dwout_i(err) = - err * sigma(wi.x)
+        # with wi the vector of weights of neuron i 
         wout_err_deriv = sigmoid(np.dot(x, self._weights))
 
         # for a hidden layer weight j of neuron i, d/dwi_j(err) matrix is as below
@@ -63,16 +64,23 @@ class NeuralNet(object):
         ) * err
         wij_err_deriv = np.dot(wij_err_deriv, x)
         
-        # Adjust output weights -- sum on first axis
-        self._output_weights = self._output_weights + (np.sum(np.multiply(np.transpose(wout_err_deriv), err), 1) * GRADIENT_STEP_SIZE)
+        # Adjust output weights -- sum on first axis, go in opposite
+        # gradient direction, that is go in err * sigma(wi.x)
+        self._output_weights = self._output_weights + (
+            np.sum(np.multiply(np.transpose(wout_err_deriv), err), 1) * GRADIENT_STEP_SIZE
+        )
 
         # Adjust input weights
         self._weights = self._weights + (np.transpose(wij_err_deriv) * GRADIENT_STEP_SIZE)
         return np.sum(np.power(y - self.run(x), 2))/len(x)
 
-    def _convergence(self):
-        # Loss / previous loss NaN init make the first ineq eval to False
-        return False; ((abs(self.loss - self._previous_loss) < ERROR_THRESHOLD/10))
+    def _convergence(self, losses):
+        '''Using training losses, if average over last 10% tail of list
+        is ~= average over [20%-10%] bracket, then convergence is True'''
+        avg_size = len(losses)/10
+        prev_avg = np.average(losses[-2*avg_size:-avg_size])
+        cur_avg = np.average(losses[-avg_size:])
+        return abs(2 * (prev_avg - cur_avg)/(prev_avg + cur_avg)) < 0.01, prev_avg, cur_avg, avg_size
 
 
 def sigmoid(x):
