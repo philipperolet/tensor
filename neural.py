@@ -48,7 +48,6 @@ class NeuralNet(object):
     def _train_batch(self, data):
         # Init
         x = data[:, :-1]
-
         y = data[:, -1]
         err = y - self.run(x)
 

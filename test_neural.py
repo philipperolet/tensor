@@ -3,7 +3,7 @@
 import unittest
 import numpy as np
 import tensorflow as tf
-
+from sklearn.neural_network import MLPRegressor
 from neural import NeuralNet
 
 
@@ -106,3 +106,13 @@ class NeuralNetTest(unittest.TestCase):
         curr_W, curr_b, curr_loss = sess.run([W_in, W_out, loss], {x: x_train[batch_ints], y: y_train[batch_ints]})
 
         print("W: %s b: %s loss: %s" % (curr_W, curr_b, curr_loss))
+
+    def test_scikit(self):
+        nn = MLPRegressor((4,), 'logistic', 'sgd', warm_start=True)
+        for i in range(10):
+            data = self.generate_data()
+            nn.fit(data[:, :-1], data[:, -1])
+            data = self.generate_data()
+            print "Loss : {}".format(
+                np.sum(np.power(nn.predict(data[:, :-1]) - data[:, -1], 2)) / len(data[:, :-1]))
+            print "example : {} -> {}".format(data[:3, :-1], nn.predict(data[:3, :-1]))
