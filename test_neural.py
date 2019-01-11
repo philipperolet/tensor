@@ -50,12 +50,15 @@ class NeuralNetTest(unittest.TestCase):
         self.nn = NeuralNet(3, 4)
         data = self.generate_data()
         loss = self.nn.train(data)
-        print "loss is {}".format(loss[-1])
-        print "test set results for xy + xz + yz"
+        print("loss is {}".format(loss[-1]))
+        print("test set results for xy + xz + yz")
         test_data = self.genenrate_data(5)
-        print [test_data, self.nn.run(test_data[:, :-1])]
+        print([test_data, self.nn.run(test_data[:, :-1])])
 
     def generate_data(self, size=100000):
+        """Generates simulation data in which y(x) = {10 if x0>0, 0 otherwise} - {20 if x1>0, 0 otherwise}
+        Thus 4 possible values: 10, 0, -10, -20
+        """
         data = np.zeros((size, 4))
         data[:, :-1] = np.random.randint(-1000, 1000, [size, 3])
         data[:, -1] = np.where(data[:, 0] > 0, 10, 0) - np.where(data[:, 1] > 0, 20, 0)
@@ -83,8 +86,8 @@ class NeuralNetTest(unittest.TestCase):
         data = self.generate_data()
         x_train = data[:, :-1]
         y_train = data[:, -1]
-        print x_train[1:10]
-        print y_train[1:10]
+        print(x_train[1:10])
+        print(y_train[1:10])
         # training loop
         init = tf.global_variables_initializer()
         sess = tf.Session()
@@ -96,9 +99,9 @@ class NeuralNetTest(unittest.TestCase):
 
             batch_ints = np.random.randint(len(x_train), size=1000)
             if (i % 100 == 0):
-                print i
-                print sess.run([W_in, W_out])
-                print sess.run(neural_model, {x : x_train[1:10]})
+                print(i)
+                print(sess.run([W_in, W_out]))
+                print(sess.run(neural_model, {x : x_train[1:10]}))
 #                import pdb; pdb.set_trace()
             sess.run(train, {x: x_train[batch_ints], y: y_train[batch_ints]})
 
@@ -113,6 +116,6 @@ class NeuralNetTest(unittest.TestCase):
             data = self.generate_data()
             nn.fit(data[:, :-1], data[:, -1])
             data = self.generate_data()
-            print "Loss : {}".format(
-                np.sum(np.power(nn.predict(data[:, :-1]) - data[:, -1], 2)) / len(data[:, :-1]))
-            print "example : {} -> {}".format(data[:3, :-1], nn.predict(data[:3, :-1]))
+            print("Loss : {}".format(
+                np.sum(np.power(nn.predict(data[:, :-1]) - data[:, -1], 2)) / len(data[:, :-1])))
+            print("example : {} -> {}".format(data[:3, :-1], nn.predict(data[:3, :-1])))

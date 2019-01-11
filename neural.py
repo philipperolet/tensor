@@ -40,9 +40,10 @@ class NeuralNet(object):
                 ))
         return training_losses
 
-    def log_every_seconds(self, message, seconds=1):
+    def log_every_seconds(self, message, seconds=3):
         if (not(hasattr(self, "_last_log")) or (time.time() - self._last_log > seconds)):
             logging.info(message)
+            import pdb; pdb.set_trace()
             self._last_log = time.time()
 
     def _train_batch(self, data):
@@ -76,7 +77,7 @@ class NeuralNet(object):
     def _convergence(self, losses):
         '''Using training losses, if average over last 10% tail of list
         is ~= average over [20%-10%] bracket, then convergence is True'''
-        avg_size = len(losses)/10
+        avg_size = int(len(losses)/10)
         prev_avg = np.average(losses[-2*avg_size:-avg_size])
         cur_avg = np.average(losses[-avg_size:])
         return abs(2 * (prev_avg - cur_avg)/(prev_avg + cur_avg)) < 0.01, prev_avg, cur_avg, avg_size
