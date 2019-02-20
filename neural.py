@@ -30,20 +30,26 @@ class NeuralNet(object):
         '''data is an array with the first n-1 columns being the inputs
         and the last column being the output'''
         training_losses = []
-        while True:
+        convergence = False
+        loss_data = []
+        while not(convergence):
+            convergence, *loss_data = self._convergence(training_losses)
             batch_ints = np.random.randint(len(data), size=BATCH_SIZE)
             current_loss = self._train_batch(data[batch_ints])  # train on batches
             training_losses.append(current_loss)
             self.log_every_seconds(
                 "Current iteration : {}, current loss : {}, convergence : {} ".format(
-                    len(training_losses), training_losses[-1], self._convergence(training_losses)
+                    len(training_losses), training_losses[-1], (convergence, *loss_data)
                 ))
+        logging.info("Final iteration : {}, current loss : {}, convergence : {} ".format(
+                    len(training_losses), training_losses[-1], (convergence, *loss_data)
+                ))
+
         return training_losses
 
     def log_every_seconds(self, message, seconds=3):
         if (not(hasattr(self, "_last_log")) or (time.time() - self._last_log > seconds)):
             logging.info(message)
-            import pdb; pdb.set_trace()
             self._last_log = time.time()
 
     def _train_batch(self, data):
@@ -80,7 +86,7 @@ class NeuralNet(object):
         avg_size = int(len(losses)/10)
         prev_avg = np.average(losses[-2*avg_size:-avg_size])
         cur_avg = np.average(losses[-avg_size:])
-        return abs(2 * (prev_avg - cur_avg)/(prev_avg + cur_avg)) < 0.01, prev_avg, cur_avg, avg_size
+        return abs(2 * (prev_avg - cur_avg)/(prev_avg + cur_avg)) < 0.00001, prev_avg, cur_avg, avg_size
 
 
 def sigmoid(x):

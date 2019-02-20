@@ -47,12 +47,12 @@ class NeuralNetTest(unittest.TestCase):
             self.nn.run(np.array([[2**51, 2**51, -2**50], [2**50, 0, 2**50]])))
 
     def test_training(self):
-        self.nn = NeuralNet(3, 4)
+        self.nn = NeuralNet(3, 8)
         data = self.generate_data()
         loss = self.nn.train(data)
         print("loss is {}".format(loss[-1]))
         print("test set results for xy + xz + yz")
-        test_data = self.genenrate_data(5)
+        test_data = self.generate_data(5)
         print([test_data, self.nn.run(test_data[:, :-1])])
 
     def generate_data(self, size=100000):
@@ -65,9 +65,9 @@ class NeuralNetTest(unittest.TestCase):
         return data
 
     def test_tf(self):
-        self.nn = NeuralNet(3, 4)
+        self.nn = NeuralNet(3, 8)
         # Model parameters
-        W_out = tf.Variable(np.reshape(self.nn._output_weights, (4, 1)), dtype=tf.float32)
+        W_out = tf.Variable(np.reshape(self.nn._output_weights, (8, 1)), dtype=tf.float32)
         W_in = tf.Variable(self.nn._weights, dtype=tf.float32)
 
         # Model input and output
@@ -103,7 +103,7 @@ class NeuralNetTest(unittest.TestCase):
                 print(sess.run([W_in, W_out]))
                 print(sess.run(neural_model, {x : x_train[1:10]}))
 #                import pdb; pdb.set_trace()
-            sess.run(train, {x: x_train[batch_ints], y: y_train[batch_ints]})
+            sess.run(train, feed_dict={x: x_train[batch_ints], y: y_train[batch_ints]})
 
         # evaluate training accuracy
         curr_W, curr_b, curr_loss = sess.run([W_in, W_out, loss], {x: x_train[batch_ints], y: y_train[batch_ints]})
