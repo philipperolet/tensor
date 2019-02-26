@@ -13,7 +13,7 @@ def dsigma(x):
 
 
 def loss(v, t):
-    return torch.dot(v-t, v-t)
+    return ((v-t) * (v-t)).sum(dim=1)
 
 
 def dloss(v, t):
@@ -49,7 +49,7 @@ def backward_pass(w1, b1, w2, b2,
         torch.matmul(dl_ds2.view(dl_ds2.size(0), -1, 1), x1.view(x1.size(0), 1, -1)),
         0
     )
-    
+
     return dl_dw1, dl_db1, dl_dw2, dl_db2
 
 
@@ -68,7 +68,7 @@ def train_network(zeta, epsilon, eta_const):
     b2 = torch.empty([10]).normal_(0, epsilon)
 
     training_start = time.perf_counter()
-    for step in range(1000):
+    for step in range(300):
 
         # init accumulators
         dl_dw2 = torch.empty([10, 50]).fill_(0)
@@ -90,22 +90,13 @@ def train_network(zeta, epsilon, eta_const):
         b2 += eta * dl_db2
 
         # compute training loss, training error
-        tr_loss = 0
-        tr_error = 0
-        for x, t in zip(train_data, train_target):
-            _, _, _, _, v = forward_pass(w1, b1, w2, b2, x)
-            tr_loss += loss(v, t)
-            if (torch.argmax(t) != torch.argmax(v)):
-                tr_error += 1
+        _, _, _, _, v = forward_pass(w1, b1, w2, b2, train_data)
+        tr_loss = torch.sum(loss(v, train_target))
+        tr_error = torch.nonzero(torch.argmax(train_target, dim=1) - torch.argmax(v, dim=1)).size(0)
 
         # compute test error
-        test_loss = 0
-        test_error = 0
-        for x, t in zip(test_data, test_target):
-            _, _, _, _, v = forward_pass(w1, b1, w2, b2, x)
-            test_loss += loss(v, t)
-            if (torch.argmax(t) != torch.argmax(v)):
-                test_error += 1
+        _, _, _, _, v = forward_pass(w1, b1, w2, b2, test_data)
+        test_error = torch.nonzero(torch.argmax(test_target, dim=1) - torch.argmax(v, dim=1)).size(0)
 
         # print step data
         print("Step {} : Loss {}, error {} %, test error: {} %, elapsed time: {}s".format(
