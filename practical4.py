@@ -38,9 +38,9 @@ class CustomNetTrainer(object):
             self._train_step(step, training_start)
 
     def _train_step(self, step, training_start):
-
-        data_batches = torch.chunk(self.data['training_input'], self.params['minibatch_size'])
-        target_batches = torch.chunk(self.data['training_target'], self.params['minibatch_size'])
+        chunk_nb = int(self.data['training_input'].size(0)/self.params['minibatch_size'])
+        data_batches = torch.chunk(self.data['training_input'], chunk_nb)
+        target_batches = torch.chunk(self.data['training_target'], chunk_nb)
 
         for data_batch, target_batch in zip(data_batches, target_batches):
             self._minibatch_step(data_batch, target_batch)
@@ -60,14 +60,10 @@ class CustomNetTrainer(object):
 
     def _minibatch_step(self, data_batch, target_batch):
         tr_loss = self.loss(self.model(data_batch), target_batch)
-        #        self.optimizer.zero_grad()
+        self.optimizer.zero_grad()
         self.model.zero_grad()
         tr_loss.backward()
-
-        for p in self.model.parameters():
-            p.data.sub_(self.params['eta'] * p.grad.data)
-
-        # self.optimizer.step()
+        self.optimizer.step()
 
     def _compute_errors(self):
         '''Computes training error and test error'''

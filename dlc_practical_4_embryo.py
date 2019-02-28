@@ -41,7 +41,7 @@ def _compute_errors(model, input, target, minibatch_size):
 train_input, train_target = Variable(train_input), Variable(train_target)
 
 model, criterion = Net(), nn.MSELoss()
-eta, mini_batch_size = 1e-1, 100
+eta, mini_batch_size = 1e-1, 10
 
 for e in range(0, 25):
     sum_loss = 0
