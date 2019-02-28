@@ -46,7 +46,7 @@ def convert_to_one_hot_labels(input, target):
     tmp.scatter_(1, target.view(-1, 1), 1.0)
     return tmp
 
-def load_data(cifar = None, one_hot_labels = False, normalize = False, flatten = True):
+def load_data(cifar = None, one_hot_labels = False, normalize = False, flatten = True, data_size='normal'):
 
     if args.data_dir is not None:
         data_dir = args.data_dir
@@ -82,11 +82,11 @@ def load_data(cifar = None, one_hot_labels = False, normalize = False, flatten =
         train_input = train_input.clone().reshape(train_input.size(0), -1)
         test_input = test_input.clone().reshape(test_input.size(0), -1)
 
-    if args.full:
+    if (args.full or data_size == 'full'):
         if args.tiny:
             raise ValueError('Cannot have both --full and --tiny')
     else:
-        if args.tiny:
+        if (args.tiny or data_size == 'tiny'):
             print('** Reduce the data-set to the tiny setup')
             train_input = train_input.narrow(0, 0, 500)
             train_target = train_target.narrow(0, 0, 500)
