@@ -1,6 +1,7 @@
 # coding: utf-8
 import time
 import torch
+import argparse
 import torch.nn as mods
 import torch.nn.functional as F
 import dlc_practical_prologue as prologue
@@ -80,12 +81,17 @@ class CustomNetTrainer(object):
         return tr_error, test_error
 
 
+parser = argparse.ArgumentParser()
+parser.add_argument("-ds", "--datasize", default='normal')
+parser.add_argument("-bs", "--batchsize", default=100)
+args = parser.parse_args()
+
 # Initialize data
 train_data, train_target, test_data, test_target = prologue.load_data(
     normalize=True,
     one_hot_labels=True,
     flatten=False,
-    data_size='normal',
+    data_size=args.datasize,
 )
 # zeta = 0.9
 # train_target *= zeta
@@ -100,7 +106,8 @@ data = dict(
 parameters = dict(
     steps=25,
     eta=0.1,
-    minibatch_size=100,
+    minibatch_size=args.batchsize,
+    data_size=args.datasize
 )
 
 CustomNetTrainer(CustomNet(), data, parameters).train()
