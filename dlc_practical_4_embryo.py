@@ -1,3 +1,4 @@
+import time
 import torch
 from torch.autograd import Variable
 from torch import nn
@@ -41,8 +42,9 @@ def _compute_errors(model, input, target, minibatch_size):
 train_input, train_target = Variable(train_input), Variable(train_target)
 
 model, criterion = Net(), nn.MSELoss()
-eta, mini_batch_size = 1e-1, 10
+eta, mini_batch_size = 1e-1, prologue.args.batchsize
 
+training_start = time.perf_counter()
 for e in range(0, 25):
     sum_loss = 0
     # We do this with mini-batches
@@ -57,7 +59,7 @@ for e in range(0, 25):
     print(e, sum_loss)
 
 for _ in range(1):
-    print("Test error {} : {}".format(
-        e,
-        _compute_errors(model, test_input, test_target, mini_batch_size)* 100.0)
-    )
+    print("Test error {}, time {}s".format(
+        _compute_errors(model, test_input, test_target, mini_batch_size) * 100.0,
+        int(time.perf_counter() - training_start)
+    ))

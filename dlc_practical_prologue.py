@@ -29,6 +29,8 @@ parser.add_argument('--data_dir',
                     type = str, default = None,
                     help = 'Where are the PyTorch data located (default $PYTORCH_DATA_DIR or \'./data\')')
 
+parser.add_argument("-bs", "--batchsize", type=int, default=100)
+
 # Timur's fix
 parser.add_argument('-f', '--file',
                     help = 'quick hack for jupyter')
