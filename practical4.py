@@ -36,6 +36,7 @@ class CustomNetTrainer(object):
         training_start = time.perf_counter()
         for step in range(self.params['steps']):
             self._train_step(step, training_start)
+        self._display_stats(step, training_start)
 
     def _train_step(self, step, training_start):
         chunk_nb = int(self.data['training_input'].size(0)/self.params['minibatch_size'])
@@ -45,7 +46,11 @@ class CustomNetTrainer(object):
         for data_batch, target_batch in zip(data_batches, target_batches):
             self._minibatch_step(data_batch, target_batch)
 
-        self._display_stats(step, training_start)
+        print("Step: {}, test error: {:.1f}%, time elapsed: {}s".format(
+            step,
+            self._compute_test_error() * 100,
+            int(time.perf_counter() - training_start)
+        ))
 
     def _display_stats(self, step, training_start):
         with torch.no_grad():
@@ -53,8 +58,8 @@ class CustomNetTrainer(object):
             print("Step {} : Loss {}, error {} %, test error: {} %, elapsed time: {}s".format(
                 step,
                 self.loss(self.model(self.data['training_input']), self.data['training_target']),
-                100.0 * tr_error / self.data['training_input'].size(0),
-                100.0 * test_error / self.data['test_input'].size(0),
+                100.0 * tr_error,
+                100.0 * test_error,
                 int(time.perf_counter() - training_start)
             ))
 
@@ -70,14 +75,15 @@ class CustomNetTrainer(object):
         tr_error = torch.nonzero(
             torch.argmax(self.data['training_target'], dim=1)
             - torch.argmax(self.model(self.data['training_input']), dim=1)
-        ).size(0)
+        ).size(0) / self.data['training_input'].size(0)
 
-        test_error = torch.nonzero(
+        return tr_error, self._compute_test_error()
+
+    def _compute_test_error(self):
+        return torch.nonzero(
             torch.argmax(self.data['test_target'], dim=1)
             - torch.argmax(self.model(self.data['test_input']), dim=1)
-        ).size(0)
-
-        return tr_error, test_error
+        ).size(0) / self.data['test_input'].size(0)
 
 
 # Initialize data
