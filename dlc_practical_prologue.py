@@ -30,6 +30,7 @@ parser.add_argument('--data_dir',
                     help = 'Where are the PyTorch data located (default $PYTORCH_DATA_DIR or \'./data\')')
 
 parser.add_argument("-bs", "--batchsize", type=int, default=100)
+parser.add_argument("-s", "--suffix", type=str, default="none")
 
 # Timur's fix
 parser.add_argument('-f', '--file',
