@@ -34,16 +34,18 @@ class Experimenter(object):
             "iterations": iterations,
             "param_combination": param_combination,
         }
-        if self.verbose:
-            pprint(params_result)
 
         for step in range(iterations):
             params_result['values'].append(self.method(**param_combination))
             if self.verbose:
-                print("Iteration {}, result: {}".format(step, params_result['values']))
+                print("Iteration {}, result: {}".format(step, params_result['values'][-1]))
 
         params_result['avg'] = np.mean(params_result['values'])
         params_result['std'] = np.std(params_result['values'])
+
+        if self.verbose:
+            pprint(params_result)
+
         return params_result
 
     def _get_params_list(self, params, parameters_dict):

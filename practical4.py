@@ -142,8 +142,8 @@ def conv3_xp(convnet):
 if __name__ == '__main__':
     # Hidden layer experiment (ex. 3)
     results = Experimenter(hidden_layer_xp).experiment(
-        {'hidden_layer_size': [10, 50,]},# 200, 500, 1000]},
-        iterations=4
+        {'hidden_layer_size': [10, 50, 200, 500, 1000]},
+        iterations=5
     )
     with open("hidden_layer_xp_{}_{}.json".format(args.suffix, int(time.time())), 'w') as res_file:
         json.dump(results, res_file)
@@ -151,7 +151,7 @@ if __name__ == '__main__':
     # 3 conv layer experiment (ex. 4)
     results = Experimenter(conv3_xp).experiment(
         {'convnet': [CustomNetConv3, CustomNet]},
-        iterations=10
+        iterations=5
     )
     with open("conv3_xp_{}_{}.json".format(args.suffix, int(time.time())), 'w') as res_file:
         json.dump(results, res_file)
