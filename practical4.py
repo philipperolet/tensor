@@ -130,6 +130,8 @@ parameters = dict(
     minibatch_size=args.batchsize,
 )
 
+default_trainer = CustomNetTrainer(CustomNet(), data, parameters)
+
 
 def hidden_layer_xp(hidden_layer_size):
     return CustomNetTrainer(CustomNet(hidden_layer_size), data, parameters).train()

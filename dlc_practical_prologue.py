@@ -31,6 +31,8 @@ parser.add_argument('--data_dir',
 
 parser.add_argument("-bs", "--batchsize", type=int, default=100)
 parser.add_argument("-s", "--suffix", type=str, default="none")
+parser.add_argument("--modelfile", type=str, default="full_model.txt")
+parser.add_argument("--imagepath", type=str, default="test_images")
 
 # Timur's fix
 parser.add_argument('-f', '--file',
