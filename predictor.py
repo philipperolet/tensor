@@ -38,11 +38,17 @@ def get_model(filename):
 
 if __name__ == '__main__':
     test_error, model = get_model(args.modelfile)
+    print("Example MNIST digit", default_trainer.data['training_input'][0])
     print("Test error: {}%".format(test_error * 100))
 
     for i in [1, 9, 8, 4, 3, 5]:
         image = Image.open(os.path.join(args.imagepath, "{}.jpg".format(i)))
-        tensor = torch.unsqueeze(tv.transforms.ToTensor()(image), 0)
-        prediction = torch.argmax(model(tensor))
-        print(model(tensor))
-        print("Prediction for {} : {}".format(i, prediction))
+        
+        tensor = tv.transforms.ToTensor()(image)
+        tensor = tv.transforms.Normalize([tensor.mean()], [-tensor.std()])(tensor)
+        tensor = tensor.apply_(lambda x: -0.5 if x < 0 else x)
+        tensor = torch.unsqueeze(tensor, 0)
+        with torch.no_grad():
+            prediction = torch.argmax(model(tensor))
+            print(model(tensor))
+            print("Prediction for {} : {}".format(i, prediction))
