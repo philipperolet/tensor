@@ -136,10 +136,21 @@ def hidden_layer_xp(hidden_layer_size):
 
 
 def conv3_xp(convnet):
+    parameters['step'] = 100
     return CustomNetTrainer(convnet(), data, parameters).train()
 
 
-if __name__ == '__main__':
+def conv3_experiment():
+    # 3 conv layer experiment (ex. 4)
+    results = Experimenter(conv3_xp).experiment(
+        {'convnet': [CustomNetConv3, CustomNet]},
+        iterations=5
+    )
+    with open("conv3_xp_{}_{}.json".format(args.suffix, int(time.time())), 'w') as res_file:
+        json.dump(results, res_file)
+
+
+def hidden_layer_experiment():
     # Hidden layer experiment (ex. 3)
     results = Experimenter(hidden_layer_xp).experiment(
         {'hidden_layer_size': [10, 50, 200, 500, 1000]},
@@ -148,10 +159,6 @@ if __name__ == '__main__':
     with open("hidden_layer_xp_{}_{}.json".format(args.suffix, int(time.time())), 'w') as res_file:
         json.dump(results, res_file)
 
-    # 3 conv layer experiment (ex. 4)
-    results = Experimenter(conv3_xp).experiment(
-        {'convnet': [CustomNetConv3, CustomNet]},
-        iterations=5
-    )
-    with open("conv3_xp_{}_{}.json".format(args.suffix, int(time.time())), 'w') as res_file:
-        json.dump(results, res_file)
+
+if __name__ == '__main__':
+    conv3_experiment()
