@@ -6,8 +6,9 @@ from pprint import pprint
 
 class Experimenter(object):
 
-    def __init__(self, method, verbose=True):
+    def __init__(self, method, step_display=None, verbose=False):
         self.method = method
+        self.step_display = step_display
         self.verbose = verbose
 
     def experiment(self, parameters_dict, iterations):
@@ -24,6 +25,9 @@ class Experimenter(object):
                 iterations
             )
             results.append(result)
+
+            if self.step_display is not None:
+                self.step_display(result)
 
         return results
 

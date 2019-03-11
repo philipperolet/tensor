@@ -64,12 +64,12 @@ if __name__ == '__main__':
 
         return Trainer(model, data, parameters, nn.CrossEntropyLoss()).train()
 
-    results = Experimenter(initialization_experiment, False).experiment(
-        {'model_function': [create_shallow_model, create_deep_model],
-         'init_std': [None, 0.001, 0.01, 0.1, 1, 10]},
-        iterations=1)
-    
-    for result in results:
+    def display(result):
         print(
             "Function {model_function}, initialization_param {init_std} : average {avg} ons {iterations} xps (std {std})".format(**result)
         )
+
+    results = Experimenter(initialization_experiment, display).experiment(
+        {'model_function': [create_shallow_model, create_deep_model],
+         'init_std': [None, 0.001, 0.01, 0.1, 1, 10]},
+        iterations=1)
