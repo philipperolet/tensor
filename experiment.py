@@ -36,7 +36,7 @@ class Experimenter(object):
             "method": self.method.__name__,
             "values": [],
             "iterations": iterations,
-            "param_combination": str(param_combination),
+            "param_combination": param_combination,
         }
 
         for step in range(iterations):
