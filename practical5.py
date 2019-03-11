@@ -54,7 +54,7 @@ if __name__ == '__main__':
         eta=0.1,
         minibatch_size=100
     )
-    
+
     def initialization_experiment(model_function, init_std=None):
         model = model_function()
         if init_std is not None:
@@ -66,10 +66,10 @@ if __name__ == '__main__':
 
     def display(result):
         print(
-            "Function {model_function}, initialization_param {init_std} : average {avg} ons {iterations} xps (std {std})".format(**result)
+            "Function {param_combination[model_function]}, initialization_param {param_combination[init_std]} : average {avg} ons {iterations} xps (std {std})".format(**result)
         )
 
     results = Experimenter(initialization_experiment, display).experiment(
         {'model_function': [create_shallow_model, create_deep_model],
          'init_std': [None, 0.001, 0.01, 0.1, 1, 10]},
-        iterations=1)
+        iterations=10)
