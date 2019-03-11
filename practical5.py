@@ -33,7 +33,6 @@ def create_shallow_model():
         nn.Linear(2, 128),
         nn.ReLU(),
         nn.Linear(128, 2),
-        nn.ReLU()
     )
 
 
@@ -44,6 +43,7 @@ def create_deep_model():
         modules_dict["fc_{}".format(layer_size)] = nn.Linear(previous_size, layer_size)
         modules_dict["relu_{}".format(layer_size)] = nn.ReLU()
         previous_size = layer_size
+    del modules_dict["relu_2"]
     return nn.Sequential(modules_dict)
 
 
@@ -66,7 +66,7 @@ if __name__ == '__main__':
 
     def display(result):
         print(
-            "Function {param_combination[model_function]}, initialization_param {param_combination[init_std]} : average {avg} ons {iterations} xps (std {std})".format(**result)
+            "Function {param_combination[model_function]}, initialization_param {param_combination[init_std]} : average {avg:.2%} ons {iterations} xps (std {std:.2%})".format(**result)
         )
 
     results = Experimenter(initialization_experiment, display).experiment(
