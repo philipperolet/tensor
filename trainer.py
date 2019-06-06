@@ -10,7 +10,10 @@ class Trainer(object):
         self.data = data
         self.params = parameters
         self.loss = loss
-        self.optimizer = torch.optim.SGD(model.parameters(), lr=self.params['eta'])
+        self.optimizer = parameters['optimizer_class'](
+            model.parameters(),
+            **parameters['optimizer_params']
+        )
 
     def train(self):
         training_start = time.perf_counter()

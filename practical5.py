@@ -61,7 +61,8 @@ def create_deep_model(last_relu=False):
 if __name__ == '__main__':
     parameters = dict(
         steps=250,
-        eta=0.1,
+        optimizer_class=torch.optim.SGD,
+        optimizer_params=dict(lr=0.1),
         minibatch_size=100
     )
 

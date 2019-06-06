@@ -7,6 +7,8 @@ import torch.nn.functional as F
 from trainer import Trainer as CustomNetTrainer
 from experiment import Experimenter
 from dlc_practical_prologue import load_data, args
+from pprint import pprint
+import matplotlib.pyplot as plt
 
 
 class CustomNet(torch.nn.Module):
@@ -63,14 +65,15 @@ data = dict(
 
 parameters = dict(
     steps=25,
-    eta=0.1,
+    optimizer_class=torch.optim.Adam,
+    optimizer_params=dict(),
     minibatch_size=args.batchsize,
 )
 
 default_trainer = CustomNetTrainer(CustomNet(), data, parameters)
 
 
-def hidden_layer_xp(hidden_layer_size):
+def compute_hidden_layer_test_error(hidden_layer_size):
     return CustomNetTrainer(CustomNet(hidden_layer_size), data, parameters).train()
 
 
@@ -91,13 +94,58 @@ def conv3_experiment():
 
 def hidden_layer_experiment():
     # Hidden layer experiment (ex. 3)
-    results = Experimenter(hidden_layer_xp).experiment(
-        {'hidden_layer_size': [10, 50, 200, 500, 1000]},
-        iterations=5
+    results = Experimenter(compute_hidden_layer_test_error, pprint).experiment(
+        {'hidden_layer_size': [10, 50, 200, 500]},
+        iterations=1,
+        json_dump=True,
     )
-    with open("hidden_layer_xp_{}_{}.json".format(args.suffix, int(time.time())), 'w') as res_file:
-        json.dump(results, res_file)
+    plt.plot(
+        [x["param_combination"]["hidden_layer_size"] for x in results['results']],
+        [y["avg"] for y in results['results']],
+        )
+    plt.show()
+
+
+def sgd_experiment():
+    """
+    Trying various SGD parameters to see how they influence learning speed
+    (by using the proxy of accuracy at a fixed speed)
+    """
+    def compute_optimizer_test_error(optim):
+        parameters = dict(
+            steps=25,
+            optimizer_class=optim['class'],
+            optimizer_params=optim['params'],
+            minibatch_size=args.batchsize,
+        )
+        return CustomNetTrainer(CustomNet(200), data, parameters).train()
+
+    results = Experimenter(compute_optimizer_test_error, pprint).experiment(
+        {'optim': [
+            {'class': torch.optim.SGD, 'params': {'lr': 0.1, 'momentum': 0}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.2, 'momentum': 0}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.05, 'momentum': 0}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.1, 'momentum': 1}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.2, 'momentum': 1}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.05, 'momentum': 1}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.1, 'momentum': 0.5}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.2, 'momentum': 0.5}},
+            {'class': torch.optim.SGD, 'params': {'lr': 0.05, 'momentum': 0.5}},
+            {'class': torch.optim.Adam, 'params': {}}
+            ]
+         },
+        iterations=5,
+        json_dump=True,
+        )
+
+
+def loss_experiment():
+    """
+    Tries multiple losses to see which performs best
+    """
+    def compute_loss_test_error(loss):
+        return CustomNetTrainer(CustomNet(200), data, parameters).train()
 
 
 if __name__ == '__main__':
-    conv3_experiment()
+    sgd_experiment()
