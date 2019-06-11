@@ -50,7 +50,7 @@ class CustomNetConv3(torch.nn.Module):
 # Initialize data
 train_data, train_target, test_data, test_target = load_data(
     normalize=True,
-    one_hot_labels=True,
+    one_hot_labels=False,
     flatten=False,
     cifar=True,
     data_size='full',
@@ -148,9 +148,9 @@ def loss_experiment():
     def compute_loss_test_error(loss):
         return CustomNetTrainer(CustomNet(200), data, parameters, loss).train()
 
-    results = Experimenter(compute_loss_test_error, pprint).experiment(
+    Experimenter(compute_loss_test_error, pprint).experiment(
         {'loss': [
-            mods.MSELoss(),
+            mods.CrossEntropyLoss(),
             ]},
         iterations=3,
         json_dump=True,
