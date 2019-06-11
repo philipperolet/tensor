@@ -49,7 +49,10 @@ class Trainer(object):
             tr_error, test_error = self._compute_errors()
             print("Step {} : Loss {}, error {} %, test error: {} %, elapsed time: {}s".format(
                 step,
-                self.loss(self.model(self.data['training_input']), self.data['training_target'].squeeze()),
+                self.loss(
+                    self.model(self.data['training_input']),
+                    self.data['training_target'].squeeze()
+                ),
                 100.0 * tr_error,
                 100.0 * test_error,
                 int(time.perf_counter() - training_start)
@@ -64,8 +67,11 @@ class Trainer(object):
         return self._compute_nb_errors(self.data['test_input'], self.data['test_target'])
 
     def _compute_nb_errors(self, input_, target):
+        final_target = target
         # if target is 1-hot vectors, need to get argmax to reduce to class numbers
-        final_target = target.squeeze() if target.size(1) == 1 else torch.argmax(target, dim=1)
+        if not(len(target.size()) == 1):
+            final_target = target.squeeze() if target.size(1) == 1 else torch.argmax(target, dim=1)
+
         return torch.nonzero(
             final_target
             - torch.argmax(self.model(input_), dim=1)

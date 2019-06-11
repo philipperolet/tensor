@@ -51,7 +51,7 @@ class Experimenter(object):
 
     def _save_as_json(self, results):
         with open(f"{self.method.__name__}_{int(time.time())}.json", 'w') as res_file:
-            json.dump(results, res_file)
+            json.dump(results, res_file, default=str)
 
     def _experiment_on_params(self, param_combination, iterations):
         params_result = {
@@ -81,5 +81,5 @@ class Experimenter(object):
 
 def get_data_from_json(filename):
     with open(filename, 'r') as data_file:
-        return json.load(data_file, default=str)
+        return json.load(data_file)
 

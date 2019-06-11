@@ -15,7 +15,7 @@ class CustomNet(torch.nn.Module):
 
     def __init__(self, hidden_units=200):
         super(CustomNet, self).__init__()
-        self.conv1 = mods.Conv2d(1, 32, kernel_size=5)
+        self.conv1 = mods.Conv2d(3, 32, kernel_size=5)
         self.conv2 = mods.Conv2d(32, 64, kernel_size=5)
         self.fc1 = mods.Linear(256, hidden_units)
         self.fc2 = mods.Linear(hidden_units, 10)
@@ -52,6 +52,8 @@ train_data, train_target, test_data, test_target = load_data(
     normalize=True,
     one_hot_labels=True,
     flatten=False,
+    cifar=True,
+    data_size='full',
 )
 # zeta = 0.9
 # train_target *= zeta
@@ -64,7 +66,7 @@ data = dict(
 )
 
 parameters = dict(
-    steps=25,
+    steps=50,
     optimizer_class=torch.optim.Adam,
     optimizer_params=dict(),
     minibatch_size=args.batchsize,
@@ -144,8 +146,16 @@ def loss_experiment():
     Tries multiple losses to see which performs best
     """
     def compute_loss_test_error(loss):
-        return CustomNetTrainer(CustomNet(200), data, parameters).train()
+        return CustomNetTrainer(CustomNet(200), data, parameters, loss).train()
+
+    results = Experimenter(compute_loss_test_error, pprint).experiment(
+        {'loss': [
+            mods.MSELoss(),
+            ]},
+        iterations=3,
+        json_dump=True,
+        )
 
 
 if __name__ == '__main__':
-    sgd_experiment()
+    loss_experiment()

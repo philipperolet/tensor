@@ -64,14 +64,13 @@ def load_data(cifar = None, one_hot_labels = False, normalize = False, flatten =
         print('* Using CIFAR')
         cifar_train_set = datasets.CIFAR10(data_dir + '/cifar10/', train = True, download = True)
         cifar_test_set = datasets.CIFAR10(data_dir + '/cifar10/', train = False, download = True)
-
-        train_input = torch.from_numpy(cifar_train_set.train_data)
+        train_input = torch.from_numpy(cifar_train_set.data)
         train_input = train_input.transpose(3, 1).transpose(2, 3).float()
-        train_target = torch.tensor(cifar_train_set.train_labels, dtype = torch.int64)
+        train_target = torch.tensor(cifar_train_set.targets, dtype = torch.int64)
 
-        test_input = torch.from_numpy(cifar_test_set.test_data).float()
+        test_input = torch.from_numpy(cifar_test_set.data).float()
         test_input = test_input.transpose(3, 1).transpose(2, 3).float()
-        test_target = torch.tensor(cifar_test_set.test_labels, dtype = torch.int64)
+        test_target = torch.tensor(cifar_test_set.targets, dtype = torch.int64)
 
     else:
         print('* Using MNIST')
