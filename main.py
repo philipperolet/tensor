@@ -52,9 +52,10 @@ train_data, train_target, test_data, test_target = load_data(
     normalize=True,
     one_hot_labels=False,
     flatten=False,
-    cifar=True,
-    data_size='full',
+    cifar=args.cifar,
+    data_size='full' if args.full else 'normal',
 )
+
 # zeta = 0.9
 # train_target *= zeta
 
@@ -76,7 +77,7 @@ default_trainer = CustomNetTrainer(CustomNet(), data, parameters)
 
 
 def compute_hidden_layer_test_error(hidden_layer_size):
-    return CustomNetTrainer(CustomNet(hidden_layer_size), data, parameters).train()
+    return CustomNetTrainer(CustomNet(hidden_layer_size), data, parameters, loss=mods.CrossEntropyLoss()).train()
 
 
 def conv3_xp(convnet):
