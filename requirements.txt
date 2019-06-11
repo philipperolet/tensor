@@ -1,7 +1,7 @@
 ipython
 matplotlib
 numpy
-sklearn
-tensorflow
+# sklearn
+# tensorflow
 torch
 torchvision
