@@ -31,7 +31,8 @@ class Experimenter(object):
         results = {
             "method_name": self.method.__name__,
             "iterations": iterations,
-            "results": []
+            "start_time": time.time(),
+            "results": [],
         }
 
         for params in itertools.product(*parameters_dict.values()):
@@ -47,6 +48,7 @@ class Experimenter(object):
         if json_dump:
             self._save_as_json(results)
 
+        results['duration'] = time.time() - results['start_time']
         return results
 
     def _save_as_json(self, results):

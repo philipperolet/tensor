@@ -148,14 +148,14 @@ def loss_experiment():
     def compute_loss_test_error(loss):
         return CustomNetTrainer(CustomNet(200), data, parameters, loss).train()
 
-    Experimenter(compute_loss_test_error, pprint).experiment(
+    pprint(Experimenter(compute_loss_test_error, pprint).experiment(
         {'loss': [
             mods.CrossEntropyLoss(),
             ]},
         iterations=3,
         json_dump=True,
         )
-
+    )
 
 if __name__ == '__main__':
     loss_experiment()
