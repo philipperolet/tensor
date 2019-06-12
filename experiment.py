@@ -52,7 +52,7 @@ class Experimenter(object):
         return results
 
     def _save_as_json(self, results):
-        with open(f"{self.method.__name__}_{int(time.time())}.json", 'w') as res_file:
+        with open(f"results/{self.method.__name__}_{int(time.time())}.json", 'w') as res_file:
             json.dump(results, res_file, default=str)
 
     def _experiment_on_params(self, param_combination, iterations):
