@@ -60,10 +60,10 @@ train_data, train_target, test_data, test_target = load_data(
 # train_target *= zeta
 
 data = dict(
-    training_input=train_data,
-    training_target=train_target,
-    test_input=test_data,
-    test_target=test_target,
+    training_input=train_data if not(torch.cuda.is_available()) else train_data.cuda(),
+    training_target=train_target if not(torch.cuda.is_available()) else train_target.cuda(),
+    test_input=test_data if not(torch.cuda.is_available()) else test_data.cuda(),
+    test_target=test_target if not(torch.cuda.is_available()) else test_target.cuda(),
 )
 
 parameters = dict(
@@ -118,7 +118,7 @@ def sgd_experiment():
         )
         return CustomNetTrainer(CustomNet(200), data, parameters).train()
 
-    results = Experimenter(compute_optimizer_test_error, pprint).experiment(
+    Experimenter(compute_optimizer_test_error, pprint).experiment(
         {'optim': [
             {'class': torch.optim.SGD, 'params': {'lr': 0.1, 'momentum': 0}},
             {'class': torch.optim.SGD, 'params': {'lr': 0.2, 'momentum': 0}},

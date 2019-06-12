@@ -6,10 +6,10 @@ import torch.nn as mods
 class Trainer(object):
 
     def __init__(self, model, data, parameters, loss=mods.MSELoss()):
-        self.model = model
+        self.model = model if not(torch.cuda.is_available()) else model.cuda()
         self.data = data
         self.params = parameters
-        self.loss = loss
+        self.loss = loss if not(torch.cuda.is_available()) else loss.cuda()
         self.optimizer = parameters['optimizer_class'](
             model.parameters(),
             **parameters['optimizer_params']
