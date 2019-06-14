@@ -13,9 +13,10 @@ import matplotlib.pyplot as plt
 
 class CustomNet(torch.nn.Module):
 
-    def __init__(self, hidden_units=200):
+    def __init__(self, is_cifar, hidden_units=200):
         super(CustomNet, self).__init__()
-        self.conv1 = mods.Conv2d(3, 32, kernel_size=5)
+        input_dimension = 3 if is_cifar else 1
+        self.conv1 = mods.Conv2d(input_dimension, 32, kernel_size=5)
         self.conv2 = mods.Conv2d(32, 64, kernel_size=5)
         self.fc1 = mods.Linear(256, hidden_units)
         self.fc2 = mods.Linear(hidden_units, 10)
@@ -52,11 +53,14 @@ train_data, train_target, test_data, test_target = load_data(
     normalize=True,
     one_hot_labels=False,
     flatten=False,
-    cifar=True,
     data_size='full',
 )
-# zeta = 0.9
-# train_target *= zeta
+
+if torch.cuda.is_available():
+    train_data = train_data.cuda()
+    train_target = train_target.cuda()
+    test_data = test_data.cuda()
+    test_target = test_target.cuda()
 
 data = dict(
     training_input=train_data,

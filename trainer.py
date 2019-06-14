@@ -12,7 +12,7 @@ class Trainer(object):
             loss = loss.cuda()
             if parallel:
                 model = mods.DataParallel(model)
-        
+
         self.model = model
         self.data = data
         self.params = parameters
