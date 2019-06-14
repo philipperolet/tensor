@@ -8,12 +8,11 @@ from trainer import Trainer as CustomNetTrainer
 from experiment import Experimenter
 from dlc_practical_prologue import load_data, args
 from pprint import pprint
-import matplotlib.pyplot as plt
 
 
 class CustomNet(torch.nn.Module):
 
-    def __init__(self, is_cifar, hidden_units=200):
+    def __init__(self, is_cifar, hidden_units):
         super(CustomNet, self).__init__()
         input_dimension = 3 if is_cifar else 1
         self.conv1 = mods.Conv2d(input_dimension, 32, kernel_size=5)
@@ -54,6 +53,7 @@ train_data, train_target, test_data, test_target = load_data(
     one_hot_labels=False,
     flatten=False,
     data_size='full',
+    cifar=True,
 )
 
 if torch.cuda.is_available():
@@ -121,7 +121,7 @@ def sgd_experiment():
         )
         return CustomNetTrainer(CustomNet(200), data, parameters).train()
 
-    results = Experimenter(compute_optimizer_test_error, pprint).experiment(
+    pprint(Experimenter(compute_optimizer_test_error, pprint).experiment(
         {'optim': [
             {'class': torch.optim.SGD, 'params': {'lr': 0.1, 'momentum': 0}},
             {'class': torch.optim.SGD, 'params': {'lr': 0.2, 'momentum': 0}},
@@ -137,7 +137,7 @@ def sgd_experiment():
          },
         iterations=5,
         json_dump=True,
-        )
+        ))
 
 
 def loss_experiment():
