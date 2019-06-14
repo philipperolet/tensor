@@ -8,7 +8,6 @@ from trainer import Trainer as CustomNetTrainer
 from experiment import Experimenter
 from dlc_practical_prologue import load_data, args
 from pprint import pprint
-import matplotlib.pyplot as plt
 
 
 class CustomNet(torch.nn.Module):
