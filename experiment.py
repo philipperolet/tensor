@@ -36,10 +36,12 @@ class Experimenter(object):
         }
 
         for params in itertools.product(*parameters_dict.values()):
+            start_time = time.time()
             result = self._experiment_on_params(
                 self._get_params_list(params, parameters_dict),
                 iterations
             )
+            result['duration'] = time.time() - start_time
             results["results"].append(result)
 
             if self.step_display is not None:
