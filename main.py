@@ -34,7 +34,13 @@ class CustomNet(torch.nn.Module):
         x = x.view(-1, 256)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
-        return x.pow(self.exp_factor) if self.exp_factor else x.exp()
+        if self.exp_factor > 0:
+            x = F.log_softmax(x.pow(self.exp_factor))
+        elif self.exp_factor == 0:
+            x = F.log_softmax(x.exp())
+        elif self.exp_factor == -1:
+            x = x.div(x.sum())
+        return x
 
 
 class CustomNetConv3(torch.nn.Module):
@@ -181,16 +187,16 @@ class Xprunner(object):
                 CustomNet(is_cifar=(dataset == 'cifar')),
                 get_data(dataset, dataset_size),
                 parameters,
-                mods.CrossEntropyLoss()
-            ).train()
+                mods.NLLLoss()
+            ).train(25)
 
         return Experimenter(compute_loss_test_error, pprint).experiment(
             {
-                'exp_factor': [0.25, 1, 2, 4, 16, None],
+                'exp_factor': [-1, 0, 0.1, 1, 15],
                 'dataset': ['mnist', 'cifar'],
-                'dataset_size': ['full', 'normal'],
+                'dataset_size': ['normal', 'full'],
             },
-            iterations=5,
+            iterations=2,
             json_dump=True,
             )
 

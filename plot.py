@@ -1,8 +1,7 @@
 from matplotlib import pyplot as plt
-import numpy as np
 import json
 from itertools import product
-from pprint import pprint
+import sys
 
 
 def plot_with_error_bars(filename):
@@ -18,8 +17,7 @@ def plot_with_error_bars(filename):
     for i, (dataset, ds_size) in enumerate(product(['mnist', 'cifar'], ['normal', 'full'])):
         plt.subplot(221 + i)
         plt.title(f"{dataset} - {ds_size}")
-        
-        # plt.xscale('log')
+
         # get data pertaining to this set & size
         data_slice = filter(
             lambda d: (d['param_combination']['dataset'] == dataset
@@ -40,3 +38,7 @@ def plot_with_error_bars(filename):
             yerr=[d['std'] * 2 for d in data_slice]
         )
     plt.show()
+
+
+if __name__ == "__main__":
+    plot_with_error_bars(sys.argv[1])
