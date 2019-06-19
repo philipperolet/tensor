@@ -86,4 +86,3 @@ class Experimenter(object):
 def get_data_from_json(filename):
     with open(filename, 'r') as data_file:
         return json.load(data_file)
-
