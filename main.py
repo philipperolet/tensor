@@ -196,7 +196,7 @@ class Xprunner(object):
                 'dataset': ['mnist', 'cifar'],
                 'dataset_size': ['normal', 'full'],
             },
-            iterations=2,
+            iterations=10,
             json_dump=True,
             )
 
