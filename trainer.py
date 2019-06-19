@@ -22,12 +22,23 @@ class Trainer(object):
             **parameters['optimizer_params']
         )
 
-    def train(self):
+    def train(self, learning_curve_points=1):
+        """Trains the model and returns the test error
+
+        Args:
+        learning_curve_points -- number of points of learning curve. 1 will just return the
+        final test error. 10 when there are 50 learning steps will return test errors at
+        iterations 5, 10, ..., 50
+        """
         training_start = time.perf_counter()
+        results = []
+
         for step in range(self.params['steps']):
             self._train_step(step, training_start)
-#            self._display_stats(step, training_start)
-        return self._compute_test_error()
+            if (step + 1) % (self.params['steps']/learning_curve_points) == 0:
+                results.append(self._compute_test_error())
+
+        return results if len(results) > 1 else results[0]
 
     def _train_step(self, step, training_start):
         chunk_nb = int(self.data['training_input'].size(0)/self.params['minibatch_size'])

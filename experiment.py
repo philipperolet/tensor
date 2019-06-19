@@ -68,8 +68,8 @@ class Experimenter(object):
             if self.verbose:
                 print("Iteration {}, result: {}".format(step, params_result['values'][-1]))
 
-        params_result['avg'] = np.mean(params_result['values'])
-        params_result['std'] = np.std(params_result['values'])
+        params_result['avg'] = np.mean(params_result['values'], 0)
+        params_result['std'] = np.std(params_result['values'], 0)
 
         if self.verbose:
             pprint(params_result)
