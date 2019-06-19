@@ -5,7 +5,7 @@ import torch.nn as mods
 
 class Trainer(object):
 
-    def __init__(self, model, data, parameters, loss=mods.MSELoss(), parallel=True):
+    def __init__(self, model, data, parameters, loss=mods.MSELoss(), parallel=False):
 
         if torch.cuda.is_available():
             model = model.cuda()
