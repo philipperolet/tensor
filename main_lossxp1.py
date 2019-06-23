@@ -19,21 +19,14 @@ class CustomNet(torch.nn.Module):
     exp_factor -- to experiment on "pre-CE" normalization
     """
 
-    loss_methods = {
-        "exp002": lambda x: F.log_softmax(x.pow(0.02)),
-        "crossE": lambda x: F.log_softmax(x),
-        "true": lambda x: torch.sign(x - x.max()),
-        "almost": lambda x: x - x.max(),
-    }
-
-    def __init__(self, is_cifar=args.cifar, hidden_units=200, loss_method="crossE"):
+    def __init__(self, is_cifar=args.cifar, hidden_units=200, exp_factor=1):
         super(CustomNet, self).__init__()
         # If cifar dataset, 3 channels, if mnist only 1
         self.conv1 = mods.Conv2d(3 if is_cifar else 1, 32, kernel_size=5)
         self.conv2 = mods.Conv2d(32, 64, kernel_size=5)
         self.fc1 = mods.Linear(256, hidden_units)
         self.fc2 = mods.Linear(hidden_units, 10)
-        self.loss_method = loss_method
+        self.exp_factor = exp_factor
 
     def forward(self, x):
         x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=3, stride=3))
@@ -41,7 +34,12 @@ class CustomNet(torch.nn.Module):
         x = x.view(-1, 256)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
-        x = CustomNet.loss_methods[self.loss_method](x)
+        if self.exp_factor > 0:
+            x = F.log_softmax(x.pow(self.exp_factor))
+        elif self.exp_factor == 0:
+            x = F.log_softmax(x.exp())
+        elif self.exp_factor == -1:
+            x = x.div(x.sum())
         return x
 
 
@@ -65,7 +63,7 @@ class CustomNetConv3(torch.nn.Module):
 
 
 parameters = dict(
-    steps=20,
+    steps=50,
     optimizer_class=torch.optim.Adam,
     optimizer_params=dict(),
     minibatch_size=args.batchsize,
@@ -184,21 +182,21 @@ class Xprunner(object):
         """
         Tries multiple losses to see which performs best
         """
-        def compute_loss_test_error(loss_method, dataset, dataset_size):
+        def compute_loss_test_error(exp_factor, dataset, dataset_size):
             return CustomNetTrainer(
                 CustomNet(is_cifar=(dataset == 'cifar')),
                 get_data(dataset, dataset_size),
                 parameters,
                 mods.NLLLoss()
-            ).train(20)
+            ).train(25)
 
         return Experimenter(compute_loss_test_error, pprint).experiment(
             {
-                'loss_method': CustomNet.loss_methods.keys(),
+                'exp_factor': [-1, 0, 0.1, 1, 15],
                 'dataset': ['mnist', 'cifar'],
                 'dataset_size': ['normal', 'full'],
             },
-            iterations=20,
+            iterations=10,
             json_dump=True,
             )
 
