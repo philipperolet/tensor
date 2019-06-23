@@ -1,3 +1,4 @@
+ipdb
 ipython
 matplotlib
 numpy
