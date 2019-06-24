@@ -13,7 +13,7 @@ from pprint import pprint
 def mse_loss(x):
     """Computes "MSE values" suitable for use with pytorch NLLLoss"""
     assert len(x.size()) == 2
-    return x * (x.transpose(0, 1) - torch.eye(x.size(1), x.size(0)))
+    return x * (x.transpose(0, 1) - torch.eye(x.size(1), x.size(0), device=x.device))
 
 
 class CustomNet(torch.nn.Module):
