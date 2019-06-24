@@ -10,6 +10,12 @@ from dlc_practical_prologue import load_data, args
 from pprint import pprint
 
 
+def mse_loss(x):
+    """Computes "MSE values" suitable for use with pytorch NLLLoss"""
+    assert len(x.size()) == 2
+    return x * (x.transpose(0, 1) - torch.eye(x.size(1), x.size(0)))
+
+
 class CustomNet(torch.nn.Module):
     """Customizable CNN
 
@@ -24,6 +30,9 @@ class CustomNet(torch.nn.Module):
         "crossE": lambda x: F.log_softmax(x),
         "true": lambda x: torch.sign(x - x.max()),
         "almost": lambda x: x - x.max(),
+        "MSE": mse_loss,
+        "dummy": lambda x: x,
+        "bad": lambda x: 0,
     }
 
     def __init__(self, is_cifar=args.cifar, hidden_units=200, loss_method="crossE"):
@@ -194,7 +203,7 @@ class Xprunner(object):
 
         return Experimenter(compute_loss_test_error, pprint).experiment(
             {
-                'loss_method': CustomNet.loss_methods.keys(),
+                'loss_method': ['crossE', 'MSE', 'dummy', 'bad', 'true'],
                 'dataset': ['mnist', 'cifar'],
                 'dataset_size': ['normal', 'full'],
             },
