@@ -32,7 +32,14 @@ class CustomNet(torch.nn.Module):
         "almost": lambda x: x - x.max(),
         "MSE": mse_loss,
         "dummy": lambda x: x,
-        "bad": lambda x: 0,
+        "bad": lambda x: torch.empty(x.size()).normal_(),
+    }
+
+    activation_functions = {
+        "ReLU": F.relu,
+        "tanh": F.tanh,
+        "negsqr": lambda x: torch.mul(x.sign(), x.abs().sqrt()),
+        "logweird": lambda x: x,
     }
 
     def __init__(self, is_cifar=args.cifar, hidden_units=200, loss_method="crossE"):
