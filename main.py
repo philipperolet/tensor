@@ -39,25 +39,28 @@ class CustomNet(torch.nn.Module):
         "ReLU": F.relu,
         "tanh": F.tanh,
         "negsqr": lambda x: torch.mul(x.sign(), x.abs().sqrt()),
-        "logweird": lambda x: x,
+        "logweird": lambda x: x.div(2) * x.log(x.pow(2)),
+        "LeakyReLU": F.leaky_relu,
+        "ReLulu": lambda x: x.div(4) + F.hardtanh(x),
     }
 
-    def __init__(self, is_cifar=args.cifar, hidden_units=200, loss_method="crossE"):
+    def __init__(self, is_cifar=args.cifar, hidden_units=200, loss_method="crossE", activation_function="ReLU"):
         super(CustomNet, self).__init__()
         # If cifar dataset, 3 channels, if mnist only 1
         self.conv1 = mods.Conv2d(3 if is_cifar else 1, 32, kernel_size=5)
         self.conv2 = mods.Conv2d(32, 64, kernel_size=5)
         self.fc1 = mods.Linear(256, hidden_units)
         self.fc2 = mods.Linear(hidden_units, 10)
-        self.loss_method = loss_method
+        self.loss_method = CustomNet.loss_methods[loss_method]
+        self.activation_function = CustomNet.activation_functions[activation_function]
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), kernel_size=3, stride=3))
-        x = F.relu(F.max_pool2d(self.conv2(x), kernel_size=2, stride=2))
+        x = self.activation_function(F.max_pool2d(self.conv1(x), kernel_size=3, stride=3))
+        x = self.activation_function(F.max_pool2d(self.conv2(x), kernel_size=2, stride=2))
         x = x.view(-1, 256)
-        x = F.relu(self.fc1(x))
+        x = self.activation_function(self.fc1(x))
         x = self.fc2(x)
-        x = CustomNet.loss_methods[self.loss_method](x)
+        x = self.loss_method(x)
         return x
 
 
@@ -202,7 +205,7 @@ class Xprunner(object):
         """
         def compute_loss_test_error(loss_method, dataset, dataset_size):
             return CustomNetTrainer(
-                CustomNet(is_cifar=(dataset == 'cifar')),
+                CustomNet(is_cifar=(dataset == 'cifar'), loss_method=loss_method),
                 get_data(dataset, dataset_size),
                 parameters,
                 mods.NLLLoss()
@@ -210,7 +213,29 @@ class Xprunner(object):
 
         return Experimenter(compute_loss_test_error, pprint).experiment(
             {
-                'loss_method': ['crossE', 'MSE', 'dummy', 'bad', 'true'],
+                'loss_method': CustomNet.loss_methods.keys(),
+                'dataset': ['mnist', 'cifar'],
+                'dataset_size': ['normal', 'full'],
+            },
+            iterations=20,
+            json_dump=True,
+            )
+
+    def activation_experiment(self):
+        """
+        Tries multiple losses to see which performs best
+        """
+        def compute_loss_test_error(activation_function, dataset, dataset_size):
+            return CustomNetTrainer(
+                CustomNet(is_cifar=(dataset == 'cifar'), activation_function=activation_function),
+                get_data(dataset, dataset_size),
+                parameters,
+                mods.NLLLoss()
+            ).train(20)
+
+        return Experimenter(compute_loss_test_error, pprint).experiment(
+            {
+                'activation_function': CustomNet.activation_functions.keys(),
                 'dataset': ['mnist', 'cifar'],
                 'dataset_size': ['normal', 'full'],
             },
