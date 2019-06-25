@@ -32,14 +32,14 @@ class CustomNet(torch.nn.Module):
         "crossE": lambda x: F.log_softmax(x),
         "true": lambda x: torch.sign(x - x.max()),
         "almost": lambda x: x - x.max(),
-        "bad": lambda x: torch.empty(x.size()).normal_(),
+        "bad": lambda x: x,
     }
 
     activation_functions = {
         "ReLU": F.relu,
         "tanh": F.tanh,
         "negsqr": lambda x: torch.mul(x.sign(), x.abs().sqrt()),
-        "logweird": lambda x: x.div(2) * x.log(x.pow(2)),
+        "logweird": lambda x: x.div(2) * (x.pow(2)).log(),
         "LeakyReLU": F.leaky_relu,
         "ReLulu": lambda x: x.div(4) + F.hardtanh(x),
     }
