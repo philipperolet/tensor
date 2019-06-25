@@ -26,12 +26,12 @@ class CustomNet(torch.nn.Module):
     """
 
     loss_methods = {
-        "exp002": lambda x: F.log_softmax(x.pow(0.02)),
+        "pow3rd": lambda x: F.log_softmax(x.pow(0.33)),
+        "pow3": lambda x: F.log_softmax(x.pow(3)),
+        "exp": lambda x: F.log_softmax(x.exp()),
         "crossE": lambda x: F.log_softmax(x),
         "true": lambda x: torch.sign(x - x.max()),
         "almost": lambda x: x - x.max(),
-        "MSE": mse_loss,
-        "dummy": lambda x: x,
         "bad": lambda x: torch.empty(x.size()).normal_(),
     }
 
