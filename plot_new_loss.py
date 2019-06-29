@@ -22,7 +22,7 @@ def plot_new_loss_xp(filename):
         ))
 
         # print experiment durations
-        print([f"{d['duration']} - {d['param_combination']['loss_method']} - {dataset} {ds_size}" for d in data_slice])
+        print([f"{d['duration']} - {d['param_combination']['loss_function']} - {dataset} {ds_size}" for d in data_slice])
 
         # plot it
         for i, d in product(range(len(data_slice) - 1), range(2)):
@@ -36,7 +36,7 @@ def plot_new_loss_xp(filename):
                 range(len(averages)),
                 averages,
                 yerr=[2 * x for x in stds],
-                label=data_slice[i + d]['param_combination']['loss_method'],
+                label=data_slice[i + d]['param_combination']['loss_function'],
                 capsize=5,
             )
             plt.legend()
