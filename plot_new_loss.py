@@ -11,8 +11,8 @@ def plot_new_loss_xp(filename):
     with open(filename, 'r') as data_file:
         data = json.load(data_file)['results']
 
-    for i, (dataset, ds_size) in enumerate(product(['mnist', 'cifar'], ['normal', 'full'])):
-        plt.figure(i)
+    for j, (dataset, ds_size) in enumerate(product(['mnist', 'cifar'], ['normal', 'full'])):
+
 
         # get data pertaining to this set & size
         data_slice = list(filter(
@@ -26,8 +26,9 @@ def plot_new_loss_xp(filename):
 
         # plot it
         for i, d in product(range(len(data_slice) - 1), range(2)):
+            plt.figure(i)
+            plt.subplot(221+j)
             plt.title(f"{dataset} - {ds_size}")
-            plt.subplot(221+i)
             averages = np.mean(data_slice[i + d]['values'], 0)
             stds = np.std(data_slice[i + d]['values'], 0)
 

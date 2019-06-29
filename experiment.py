@@ -19,7 +19,7 @@ class Experimenter(object):
         self.step_display = step_display
         self.verbose = verbose
 
-    def experiment(self, parameters_dict, iterations, json_dump=False):
+    def experiment(self, parameters_dict, iterations, json_dump=False, name=None):
         """
         parameters_dict: a dict of parameters, with each a list of values to try,
         iterations: the number of times the test should be repeated
@@ -48,13 +48,16 @@ class Experimenter(object):
                 self.step_display(result)
 
         if json_dump:
-            self._save_as_json(results)
+            self._save_as_json(results, name)
 
         results['duration'] = time.time() - results['start_time']
         return results
 
-    def _save_as_json(self, results):
-        with open(f"results/{self.method.__name__}_{int(time.time())}.json", 'w') as res_file:
+    def _save_as_json(self, results, name=None):
+        filename = f"results/{self.method.__name__}_{int(time.time())}.json"
+        if name:
+            filename = f"experiments/{name}.{time.time()}.result.json"
+        with open(filename, 'w') as res_file:
             json.dump(results, res_file, default=str)
 
     def _experiment_on_params(self, param_combination, iterations):

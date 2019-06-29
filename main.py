@@ -1,86 +1,15 @@
 # coding: utf-8
 import json
 import time
+import importlib
 import torch
 import torch.nn as mods
-import torch.nn.functional as F
+
+from customnet import CustomNet, CustomNetConv3
 from trainer import Trainer as CustomNetTrainer
 from experiment import Experimenter
 from dlc_practical_prologue import load_data, args
 from pprint import pprint
-
-
-def mse_loss(x):
-    """Computes "MSE values" suitable for use with pytorch NLLLoss"""
-    assert len(x.size()) == 2
-    return x * (x.transpose(0, 1) - torch.eye(x.size(1), x.size(0), device=x.device))
-
-
-class CustomNet(torch.nn.Module):
-    """Customizable CNN
-
-    Args:
-    is_cifar -- should be set to True if using CIFAR rather than MNIST
-    hidden_units -- size of the last hidden layer
-    exp_factor -- to experiment on "pre-CE" normalization
-    """
-
-    loss_methods = {
-        "pow3rd": lambda x: F.log_softmax(x.pow(0.33)),
-        "pow3": lambda x: F.log_softmax(x.pow(3)),
-        "exp": lambda x: F.log_softmax(x.exp()),
-        "crossE": lambda x: F.log_softmax(x),
-        "true": lambda x: torch.sign(x - x.max()),
-        "almost": lambda x: x - x.max(),
-        "bad": lambda x: x,
-    }
-
-    activation_functions = {
-        "ReLU": F.relu,
-        "tanh": F.tanh,
-        "negsqr": lambda x: torch.mul(x.sign(), x.abs().sqrt()),
-        "logweird": lambda x: x.div(2) * (x.pow(2)).log(),
-        "LeakyReLU": F.leaky_relu,
-        "ReLulu": lambda x: x.div(4) + F.hardtanh(x),
-    }
-
-    def __init__(self, is_cifar=args.cifar, hidden_units=200, loss_method="crossE", activation_function="ReLU"):
-        super(CustomNet, self).__init__()
-        # If cifar dataset, 3 channels, if mnist only 1
-        self.conv1 = mods.Conv2d(3 if is_cifar else 1, 32, kernel_size=5)
-        self.conv2 = mods.Conv2d(32, 64, kernel_size=5)
-        self.fc1 = mods.Linear(256, hidden_units)
-        self.fc2 = mods.Linear(hidden_units, 10)
-        self.loss_method = CustomNet.loss_methods[loss_method]
-        self.activation_function = CustomNet.activation_functions[activation_function]
-
-    def forward(self, x):
-        x = self.activation_function(F.max_pool2d(self.conv1(x), kernel_size=3, stride=3))
-        x = self.activation_function(F.max_pool2d(self.conv2(x), kernel_size=2, stride=2))
-        x = x.view(-1, 256)
-        x = self.activation_function(self.fc1(x))
-        x = self.fc2(x)
-        x = self.loss_method(x)
-        return x
-
-
-class CustomNetConv3(torch.nn.Module):
-
-    def __init__(self, hidden_units=200):
-        super(CustomNetConv3, self).__init__()
-        self.conv1 = mods.Conv2d(1, 16, kernel_size=3)
-        self.conv2 = mods.Conv2d(16, 32, kernel_size=4)
-        self.conv3 = mods.Conv2d(32, 64, kernel_size=2)
-        self.fc1 = mods.Linear(256, hidden_units)
-        self.fc2 = mods.Linear(hidden_units, 10)
-
-    def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2(x), 2))
-        x = F.relu(F.max_pool2d(self.conv3(x), 2))
-        x = x.view(-1, 256)
-        x = F.relu(self.fc1(x))
-        return self.fc2(x)
 
 
 parameters = dict(
@@ -205,7 +134,7 @@ class Xprunner(object):
         """
         def compute_loss_test_error(loss_method, dataset, dataset_size):
             return CustomNetTrainer(
-                CustomNet(is_cifar=(dataset == 'cifar'), loss_method=loss_method),
+                CustomNet(is_cifar=(dataset == 'cifar'), loss_function=loss_method),
                 get_data(dataset, dataset_size),
                 parameters,
                 mods.NLLLoss()
@@ -213,7 +142,7 @@ class Xprunner(object):
 
         return Experimenter(compute_loss_test_error, pprint).experiment(
             {
-                'loss_method': CustomNet.loss_methods.keys(),
+                'loss_method': CustomNet.loss_functions.keys(),
                 'dataset': ['mnist', 'cifar'],
                 'dataset_size': ['normal', 'full'],
             },
@@ -247,3 +176,27 @@ class Xprunner(object):
         global data
         data = get_data()
         pprint(self.hidden_layer_experiment())
+
+
+def run_experiment(xp_name):
+    """Runs an experiment described by parameters in the provided python module
+    named {xp_name}.py in experiments/ folder
+
+    The result file will be named according to the input file, replacing '.py' by
+    '.{date-time}.result.json'
+    """
+    xp_data = importlib.import_module('experiments.' + xp_name)
+
+    def default_xp_function(**variable_params):
+        return CustomNetTrainer(
+            CustomNet(is_cifar=(variable_params['dataset'] == 'cifar'), **variable_params),
+            get_data(variable_params['dataset'], variable_params['dataset_size']),
+            xp_data.fixed_parameters,
+            mods.NLLLoss()
+        ).train(xp_data.learning_curve_points)
+
+    return Experimenter(default_xp_function, pprint).experiment(
+        xp_data.variable_parameters,
+        iterations=xp_data.iterations,
+        name=xp_name,
+        json_dump=True)
