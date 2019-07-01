@@ -44,8 +44,8 @@ class CustomNet(torch.nn.Module):
                  conv1_kernel_size=5,
                  pool1_kernel_size=3,
                  conv2_channels=64,
-                 pool2_kernel_size=2,
                  conv2_kernel_size=5,
+                 pool2_kernel_size=2,
                  **kwargs):
 
         super(CustomNet, self).__init__()
@@ -56,13 +56,13 @@ class CustomNet(torch.nn.Module):
         # Setup first convolution layer
         self.conv1 = mods.Conv2d(input_channels, conv1_channels, kernel_size=conv1_kernel_size)
         self.pool1 = mods.MaxPool2d(pool1_kernel_size)
-        assert (self.IMAGE_SIZE - conv1_kernel_size) % pool1_kernel_size == 0
+        # assert (self.IMAGE_SIZE - conv1_kernel_size) % pool1_kernel_size == 0
         activation1_edge_size = (self.IMAGE_SIZE - conv1_kernel_size) / pool1_kernel_size
 
         # Setup second convolution layer
         self.conv2 = mods.Conv2d(conv1_channels, conv2_channels, kernel_size=conv2_kernel_size)
         self.pool2 = mods.MaxPool2d(pool2_kernel_size)
-        assert (activation1_edge_size - conv2_kernel_size) % pool2_kernel_size == 0
+        # assert (activation1_edge_size - conv2_kernel_size) % pool2_kernel_size == 0
         activation2_edge_size = (activation1_edge_size - conv2_kernel_size) / pool2_kernel_size
 
         # Setup linear layers
